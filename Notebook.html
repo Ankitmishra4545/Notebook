@@ -1,0 +1,74 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notebook App</title>
+    <style>
+        /* Add your styles here */
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>Notebook</h1>
+        <div>
+            <input type="text" placeholder="Search Notes" id="searchInput" oninput="searchNotes()">
+        </div>
+        <div>
+            <p>Total Notebooks: <span id="totalNotebooks">0</span></p>
+            <p>Showing: <span id="showingNotebooks">0</span></p>
+        </div>
+        <div>
+            <input type="text" placeholder="Note Title" id="noteTitle">
+            <textarea placeholder="Note Description" id="noteDescription"></textarea>
+            <button onclick="addNote()">Add Note</button>
+        </div>
+        <ul id="noteList"></ul>
+    </div>
+
+    <script>
+        let notebooks = JSON.parse(localStorage.getItem('notebooks')) || [];
+
+        function updateUI() {
+            const totalNotebooks = notebooks.length;
+            const showingNotebooks = notebooks.filter(note => note.title.toLowerCase().includes(document.getElementById('searchInput').value.toLowerCase())).length;
+
+            document.getElementById('totalNotebooks').innerText = totalNotebooks;
+            document.getElementById('showingNotebooks').innerText = showingNotebooks;
+
+            const noteList = document.getElementById('noteList');
+            noteList.innerHTML = '';
+
+            notebooks.forEach(note => {
+                const li = document.createElement('li');
+                li.innerHTML = `${note.title} - ${note.description} <button onclick="deleteNote('${note.title}')">Delete</button>`;
+                noteList.appendChild(li);
+            });
+        }
+
+        function addNote() {
+            const title = document.getElementById('noteTitle').value;
+            const description = document.getElementById('noteDescription').value;
+
+            if (title.trim() !== '') {
+                notebooks.push({ title, description });
+                localStorage.setItem('notebooks', JSON.stringify(notebooks));
+                updateUI();
+            }
+        }
+
+        function deleteNote(title) {
+            notebooks = notebooks.filter(note => note.title !== title);
+            localStorage.setItem('notebooks', JSON.stringify(notebooks));
+            updateUI();
+        }
+
+        function searchNotes() {
+            updateUI();
+        }
+
+        window.onload = updateUI;
+    </script>
+</body>
+</html>
