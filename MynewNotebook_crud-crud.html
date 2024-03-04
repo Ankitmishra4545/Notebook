@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notebook App</title>
+</head>
+<body>
+    <div id="app">
+        <h1>Notebook</h1>
+        <div>
+            <label for="searchInput">Search Notes:</label>
+            <input type="text" placeholder="Type to search" id="searchInput" oninput="searchNotes()">
+        </div>
+        <div>
+            <p>Total Notes: <span id="totalNotes">0</span></p>
+            <p>Showing: <span id="showingNotes">0</span></p>
+        </div>
+        <div>
+            <label for="noteTitle">Note Title:</label>
+            <input type="text" placeholder="Enter note title" id="noteTitle">
+            <textarea placeholder="Note Description" id="noteDescription"></textarea>
+            <button onclick="addNote()">Add Note</button>
+        </div>
+        <ul id="noteList"></ul>
+    </div>
+
+    <script>
+        async function fetchNotes() {
+            try {
+                const response = await fetch('https://crudcrud.com/api/021b1b39bdfa4ec4a10431abd1855fb4/notes');
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error fetching notes:', error);
+                return [];
+            }
+        }
+
+        async function addNote() {
+            const title = document.getElementById('noteTitle').value;
+            const description = document.getElementById('noteDescription').value;
+
+            if (title.trim() !== '') {
+                const newNote = { title, description };
+                
+                try {
+                    const response = await fetch('https://crudcrud.com/api/021b1b39bdfa4ec4a10431abd1855fb4/notes', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(newNote),
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Error adding note');
+                    }
+
+                    // Update UI after adding note
+                    updateUI();
+                } catch (error) {
+                    console.error('Error adding note:', error);
+                }
+            }
+        }
+
+        async function deleteNote(id) {
+            try {
+                await fetch(`https://crudcrud.com/api/021b1b39bdfa4ec4a10431abd1855fb4/notes/${id}`, {
+                    method: 'DELETE',
+                });
+
+                // Update UI after deleting note
+                updateUI();
+            } catch (error) {
+                console.error('Error deleting note:', error);
+            }
+        }
+
+        async function updateUI() {
+            const notes = await fetchNotes();
+
+            const totalNotes = notes.length;
+            const showingNotes = notes.filter(note => note.title.toLowerCase().includes(document.getElementById('searchInput').value.toLowerCase())).length;
+
+            document.getElementById('totalNotes').innerText = totalNotes;
+            document.getElementById('showingNotes').innerText = showingNotes;
+
+            const noteList = document.getElementById('noteList');
+            noteList.innerHTML = '';
+
+            notes.forEach(note => {
+                const li = document.createElement('li');
+                li.innerHTML = `${note.title} - ${note.description} <button onclick="deleteNote('${note._id}')">Delete</button>`;
+                noteList.appendChild(li);
+            });
+        }
+
+        function searchNotes() {
+            updateUI();
+        }
+
+        window.onload = updateUI;
+    </script>
+</body>
+</html>
